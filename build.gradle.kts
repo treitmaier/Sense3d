@@ -25,10 +25,7 @@ dependencies {
     // implementation("com.pi4j:pi4j-plugin-pigpio:2.0-SNAPSHOT")
 
     // logging
-//    implementation("org.apache.logging.log4j:log4j-core:2.11.0")
-//    implementation("org.slf4j:slf4j-api:1.7.25")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.11.0")
-    implementation("io.github.microutils:kotlin-logging:1.7.10")
+    implementation("org.slf4j:slf4j-api:2.0.0-alpha0")
 }
 
 tasks {

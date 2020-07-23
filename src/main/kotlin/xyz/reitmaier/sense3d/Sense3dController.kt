@@ -1,13 +1,12 @@
 package xyz.reitmaier.sense3d
 import com.pi4j.io.gpio.digital.*
 import com.pi4j.io.i2c.I2C
-import mu.KotlinLogging
+import org.slf4j.LoggerFactory
 import java.io.IOException
 
 @OptIn(ExperimentalUnsignedTypes::class)
-// TODO find alternative to KLogging
 class Sense3dController(private val i2c: I2C, private val reset: DigitalOutput, private val ts: DigitalMultipurpose) {
-    private val logger = KotlinLogging.logger {}
+    val logger = LoggerFactory.getLogger(Sense3dController::class.java)
 
     private val FLAG_FIRMWARE_INFO = 0x83u
     private val FLAG_SENSOR_DATA = 0x91u
@@ -75,7 +74,7 @@ class Sense3dController(private val i2c: I2C, private val reset: DigitalOutput, 
      * @throws Exception if chipset fails to initialise
      */
     fun init() : FirmwareInfo {
-        logger.info { "Initializing MGC3130 Chipset..." }
+        logger.info("Initializing MGC3130 Chipset...")
         reset.low()
         Thread.sleep(40)
         reset.high()
@@ -84,9 +83,9 @@ class Sense3dController(private val i2c: I2C, private val reset: DigitalOutput, 
         val data = readMsg(132)
 
         if(data[3] != FLAG_FIRMWARE_INFO.toUByte()) {
-            logger.error { "Unexpected Message Contents" }
-            logger.error { "Did not receive firmware info" }
-            logger.error { "... Initialisation of MGC3130 Chipset failed." }
+            logger.error("Unexpected Message Contents")
+            logger.error("Did not receive firmware info")
+            logger.error("... Initialisation of MGC3130 Chipset failed.")
             throw Exception("Failed to initialize MGC3130 Chipset")
         }
         val fw = parseFirmwareInfo(data)
@@ -97,17 +96,17 @@ class Sense3dController(private val i2c: I2C, private val reset: DigitalOutput, 
                 0xa2.toByte(), 0xa1.toByte(), 0x00, 0x00, 0x00, 0x1f, 0x00, 0x00, 0x00, 0xff.toByte(),
                 0xff.toByte(), 0xff.toByte(), 0xff.toByte()
         )
-        logger.debug { "Locking data output for\n 0: DSP Status\n 1: Gesture Data\n 2: TouchInfo\n 3: AirWheelInfo\n 4: xyzPosition" }
+        logger.debug("Locking data output for\n 0: DSP Status\n 1: Gesture Data\n 2: TouchInfo\n 3: AirWheelInfo\n 4: xyzPosition")
         i2c.write(dataOutputLock)
         Thread.sleep(100)
 
 
         val autoCalibration = byteArrayOf(0x10, 0x00, 0x00,
                 0xa2.toByte(), 0x80.toByte(), 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x00)
-        logger.debug {  "Enable auto-calibration for:\n Bit 1: gesture-triggered\n Bit 2: negative\n Bit 3: idle\n Bit 4: invalid values, if values completely out of range\n Bit 5: triggered by AFA (Automati Frequency Adjustment)"}
+        logger.debug("Enable auto-calibration for:\n Bit 1: gesture-triggered\n Bit 2: negative\n Bit 3: idle\n Bit 4: invalid values, if values completely out of range\n Bit 5: triggered by AFA (Automati Frequency Adjustment)")
         i2c.write(autoCalibration)
 
-        logger.info{ "... Initialisation of MGC3130 Chipset complete." }
+        logger.info("... Initialisation of MGC3130 Chipset complete.")
 
         return fw
     }
@@ -141,7 +140,7 @@ class Sense3dController(private val i2c: I2C, private val reset: DigitalOutput, 
         } catch (e: InterruptedException) {
             e.printStackTrace()
         }
-        logger.info { "Stopped polling MGC3130 chipset." }
+        logger.info("Stopped polling MGC3130 chipset.")
     }
 
     /**
@@ -162,15 +161,15 @@ class Sense3dController(private val i2c: I2C, private val reset: DigitalOutput, 
      * @see [start] & @see [stop]
      */
     private fun poll() {
-        logger.info { "Beginning to continuously poll MGC3130 chipset ..." }
+        logger.info("Beginning to continuously poll MGC3130 chipset ...")
         try {
             while (running) {
                 val length = 26
                 val data = readMsg(length)
                 if (data.isEmpty() || data[0] == 0u.toUByte()) {
-//                    logger.debug { "No message from MGC3130 sensor" }
+//                    logger.debug("No message from MGC3130 sensor")
                 } else if (data.size != length) {
-                    logger.debug { "Only read ${data.size} of $length bytes from sensor." }
+                    logger.debug("Only read ${data.size} of $length bytes from sensor.")
                 } else if (data[3] == FLAG_SENSOR_DATA.toUByte()) {
                     parseAndSurfaceSensorData(data)
                 }
@@ -186,13 +185,13 @@ class Sense3dController(private val i2c: I2C, private val reset: DigitalOutput, 
      * [length]: how many bytes to read (usually 26)
      */
     private fun readMsg(length: Int = 26) : UByteArray {
-//       logger.debug { "Waiting to read message of length $length ... "}
+//       logger.debug("Waiting to read message of length $length ... "}
         val end = System.currentTimeMillis() + 5
         while (ts.isHigh && System.currentTimeMillis() < end) {
             Thread.sleep(1)
         }
         if (ts.isHigh)  {
-//           logger.debug { "... No new message available" }
+//           logger.debug("... No new message available")
             return ByteArray(4).toUByteArray() // [0,0,0,0]
         }
         // Assert transfer line low to ensure
@@ -202,7 +201,7 @@ class Sense3dController(private val i2c: I2C, private val reset: DigitalOutput, 
             ts.output().low()
             return try {
                 val data = i2c.readNBytes(length).toUByteArray()
-//               logger.debug { " ... read ${data.size} of $length bytes" }
+//               logger.debug(" ... read ${data.size} of $length bytes")
                 data
             } catch (e: IOException) {
                 //TODO count errors
