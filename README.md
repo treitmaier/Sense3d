@@ -11,7 +11,7 @@ Communication with the MGC3130 chipset is accomplished via a two-wire I2C interf
 
 Coming from the world of mobile interface design and development on Android, I wanted to utilise programming paradigms (functional interfaces and lambda expressions) as well as language features (e.g. streams & anonymous classes) that have been introduced since Java 8. Unfortunately this ruled out using the stable version of Pi4J as it is not compatible with more current JDK versions. Sense3d therefore depends on [Version 2 of Pi4J](https://v2.pi4j.com/), which targets JDK 11 and is currently under active development. That means there is no API compatibility with previous versions of Pi4J and current APIs are also subject to change.  Hopefully those APIs will stabilise soon.
 
-As the [MGC3130 interface specification](docs/MGC3130-Library-Interface-Description.pdf) spec utilises unsigned byte representations and arithmetics, Sense3d utilises Kotlin's corresponding [unsigned integer types](https://kotlinlang.org/docs/reference/whatsnew13.html) (`UByte` and `UInt`).  This is currently an experimental feature in Kotlin 1.3, which should hopefully become stable in the next Kotlin release.
+As the [MGC3130 interface specification](docs/MGC3130-Library-Interface-Description.pdf) utilises unsigned byte representations and arithmetics, Sense3d utilises Kotlin's corresponding [unsigned integer types](https://kotlinlang.org/docs/reference/whatsnew13.html) (`UByte` and `UInt`).  This is currently an experimental feature in Kotlin 1.3, which should hopefully become stable in the next Kotlin release.
 
 ## Setup
 
